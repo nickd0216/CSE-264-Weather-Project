@@ -1,3 +1,5 @@
+import SearchBar from "../components/SearchBar";
+
 export default function Home() {
   return (
     <main className="min-h-screen p-8 bg-green-50">
@@ -8,9 +10,9 @@ export default function Home() {
         The gardening weather platform!
       </p>
       
-      {/* TODO: build these components next and put them here! */}
-      <div className="border-4 border-dashed border-gray-300 p-8 text-center rounded-lg">
-        <p>[Search Bar Component Goes Here]</p>
+      {/*the imported search bar*/}
+      <div className="mb-12">
+        <SearchBar />
       </div>
       
       <div className="border-4 border-dashed border-gray-300 p-16 mt-8 text-center rounded-lg">
