@@ -5,6 +5,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import SearchBar from "../components/SearchBar";
+import ForecastDisplay from "../components/ForecastDisplay"; //import new component
 
 //this tells Next.js to ONLY load the map on the client side (browser), avoiding ssr crashes
 const MapComponent = dynamic(() => import("../components/Map"), {
@@ -22,10 +23,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-8 bg-green-50">
-      <h1 className="text-4xl font-bold text-green-800 mb-4">
+      <h1 className="text-4xl font-bold text-green-800 mb-4 text-center">
         Welcome to SproutCast
       </h1>
-      <p className="text-lg text-gray-700 mb-8">
+      <p className="text-lg text-gray-700 mb-8 text-center">
         The gardening weather platform!
       </p>
       
@@ -35,10 +36,19 @@ export default function Home() {
         <SearchBar onCitySelect={setMapCoordinates}/>
       </div>
       
-      {/*the dynamically loaded map !!*/}
-      <div className="max-w-4xl mx-auto mt-8">
-        { /*pass the current coordinates to the map so it knows where to look */}
-        <MapComponent coordinates={mapCoordinates} />
+      {/*wrap them in CSS Grid -- 1 col on mobile, 2 cols on med+ screens*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto mt-8 relative z-0">
+
+        {/*left col: the map */}
+        <div className="w-full">
+          <MapComponent coordinates={mapCoordinates} />
+        </div>
+
+        {/* right col: forecast */}
+        <div className="w-full">
+          <ForecastDisplay coordinates={mapCoordinates} />
+        </div>
+
       </div>
     </main>
   );
