@@ -13,11 +13,21 @@ The fix for this is using dynamic imports!
 "use client";
 
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-export default function Map() {
+//create a tiny helper component that tells the map to move when coordinates change
+function RecenterMap({coordinates}){
+    const map = useMap();
+    useEffect(() => {
+        map.setView(coordinates, 13); //note: 13 is the zooom level
+    }, [coordinates, map]);
+    return null;
+}
+
+//accept the coordinates prop from page.js
+export default function Map({coordinates}) {
   //fix for standard Leaflet marker icons disappearing in Next.js !!
   useEffect(() => {
     delete L.Icon.Default.prototype._getIconUrl;
@@ -34,14 +44,18 @@ export default function Map() {
   return (
     <div className="w-full h-[400px] rounded-xl overflow-hidden shadow-md border-2 border-green-200">
       {/*NOTE: z-index is set to 0 so the auto-complete dropdown goes over the map, not under it! */}
-      <MapContainer center={position} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%", zIndex: 0 }}>
+      {/*use the coordinates for the center and marker */}
+      <MapContainer center={coordinates} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%", zIndex: 0 }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={position}>
+        {/*drop in helper component*/}
+        <RecenterMap coordinates={coordinates}/>
+
+        <Marker position={coordinates}>
           <Popup>
-            Bethlehem, PA <br /> Perfect weather for planting!
+            Selected Location <br /> Perfect weather for planting!
           </Popup>
         </Marker>
       </MapContainer>

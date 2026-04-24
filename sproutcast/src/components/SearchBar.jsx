@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from "react";
 
-export default function SearchBar() {
+//accept the onCitySelect prop here
+export default function SearchBar({onCitySelect}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
@@ -47,8 +48,12 @@ export default function SearchBar() {
     setSearchQuery(cityName);
     setSuggestions([]); //close the dropdown !!
     
+    //send the newly selected coordinates up to page.js
+    if(onCitySelect){
+        onCitySelect([city.lat, city.lon]);
+    }
     //now have the exact coordinates to fetch the weather next !
-    console.log("Selected coordinates for weather fetch:", city.lat, city.lon);
+    //console.log("Selected coordinates for weather fetch:", city.lat, city.lon);
   };
 
   return (

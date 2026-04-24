@@ -2,6 +2,7 @@
 //as a server component -- but need next.js to treat the entire homepage as 
 //a client component so it knows to run it in the browser since the map uses ssr: false
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import SearchBar from "../components/SearchBar";
 
@@ -16,6 +17,9 @@ const MapComponent = dynamic(() => import("../components/Map"), {
 });
 
 export default function Home() {
+  //First, create a state to hold the coordinates (default: Bethlehem, PA)
+  const [mapCoordinates, setMapCoordinates] = useState([40.6259, -75.3705]);
+
   return (
     <main className="min-h-screen p-8 bg-green-50">
       <h1 className="text-4xl font-bold text-green-800 mb-4">
@@ -27,12 +31,14 @@ export default function Home() {
       
       {/*the imported search bar*/}
       <div className="mb-12">
-        <SearchBar />
+        {/*pass the 'setter' function to the SearchBar so it can update the coordinates*/}
+        <SearchBar onCitySelect={setMapCoordinates}/>
       </div>
       
+      {/*the dynamically loaded map !!*/}
       <div className="max-w-4xl mx-auto mt-8">
-        {/*the dynamically loaded map !!*/}
-        <MapComponent />
+        { /*pass the current coordinates to the map so it knows where to look */}
+        <MapComponent coordinates={mapCoordinates} />
       </div>
     </main>
   );
