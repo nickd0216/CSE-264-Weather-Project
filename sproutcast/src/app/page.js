@@ -1,4 +1,19 @@
+"use client"; //need this here because by default Next.js treats page.js
+//as a server component -- but need next.js to treat the entire homepage as 
+//a client component so it knows to run it in the browser since the map uses ssr: false
+
+import dynamic from "next/dynamic";
 import SearchBar from "../components/SearchBar";
+
+//this tells Next.js to ONLY load the map on the client side (browser), avoiding ssr crashes
+const MapComponent = dynamic(() => import("../components/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] w-full bg-green-100 animate-pulse rounded-xl flex items-center justify-center">
+      <p className="text-green-800 font-semibold">Loading Map...</p>
+    </div>
+  ),
+});
 
 export default function Home() {
   return (
@@ -15,8 +30,9 @@ export default function Home() {
         <SearchBar />
       </div>
       
-      <div className="border-4 border-dashed border-gray-300 p-16 mt-8 text-center rounded-lg">
-        <p>[Interactive Map Component Goes Here]</p>
+      <div className="max-w-4xl mx-auto mt-8">
+        {/*the dynamically loaded map !!*/}
+        <MapComponent />
       </div>
     </main>
   );
