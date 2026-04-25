@@ -26,7 +26,35 @@ export default function ForecastDisplay({ coordinates }) {
             //the forecast api returns 40 timestamps -- aka every 3 hrs
             //filter it to just grab one daytime reading (abt 12 pm) for the next 5 days
             if(futureData.list){
-                const dailyForecasts = futureData.list.filter(item => item.dt_txt.includes("12:00:00"));
+                const days = {};
+                futureData.list.forEach(item => {
+                    const dateStr = item.dt_txt.split(" ")[0]; //extracts just the YYYY-MM-DD
+
+                    if(!days[dateStr]){
+                        days[dateStr] = {
+                            dt : item.dt,
+                            temps : [],
+                            icon : item.weather[0].icon.replace('n', 'd') //defaults to day icon
+                        };
+                    }
+
+                    //collect all temps for this specific day
+                    days[dateStr].temps.push(item.main.temp);
+
+                    //if its the noon reading, use its specific weather icon
+                    if(item.dt_txt.includes("12:00:00")){
+                        days[dateStr].icon = item.weather[0].icon;
+                    }
+                });
+                //map through grouped days to find the min and max temps
+                const dailyForecasts = Object.values(days).slice(0, 5).map(day => {
+                    return{
+                        dt: day.dt,
+                        icon : day.icon,
+                        high : Math.round(Math.max(...day.temps)),
+                        low : Math.round(Math.min(...day.temps))
+                    };
+                });
                 setForecastData(dailyForecasts);
             }
         }
@@ -111,11 +139,15 @@ export default function ForecastDisplay({ coordinates }) {
               <div key={index} className="flex flex-col items-center p-2 bg-gray-50 rounded-lg border border-gray-100">
                 <p className="text-xs font-semibold text-gray-600">{dayName}</p>
                 <img 
-                  src={`http://openweathermap.org/img/wn/${day.weather[0].icon}.png`} 
-                  alt={day.weather[0].description}
+                  src={`http://openweathermap.org/img/wn/${day.icon}.png`} 
+                  alt="Weather Icon"
                   className="w-10 h-10"
                 />
-                <p className="text-sm font-bold text-gray-800">{Math.round(day.main.temp)}°</p>
+                <div className="flex gap-1 text-sm font-bold mt-1">
+                    <span className="text-gray-800">{day.high}°</span>
+                    <span className="text-gray-400">/</span>
+                    <span className="text-blue-600">{day.low}°</span>
+                </div>
               </div>
             );
           })}
