@@ -1,7 +1,0 @@
-Hey guys! I set up file structure and some functionality.
-
-If you want to test the flow, try typing admin@sproutcast.com into your login page.
-Any password you enter will allow you to be admin for now. You can also test the normal user.
-
-Please remember to gitignore our .env when we start adding in credentials and keys.
-
