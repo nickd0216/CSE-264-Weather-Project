@@ -6,25 +6,38 @@ import { useEffect, useState } from "react";
 export default function ForecastDisplay({ coordinates }) {
   const [loading, setLoading] = useState(true);
   const [weatherData, setWeatherData] = useState(null);
+  const [forecastData, setForecastData] = useState([]);
 
   //fetch the REAL weather whenever the coords change
   useEffect(() => {
-    const fetchWeather = async () => {
+    const fetchWeatherAndForecast = async () => {
         setLoading(true);
         try{
-            //coordinates[0] is lat, coordinates[1] is long
-            const res = await fetch(`/api/weather?lat=${coordinates[0]}&lon=${coordinates[1]}`);
-            const data = await res.json();
-            setWeatherData(data);
+            //fetch both APIs at the same time to speed up loading
+            const [weatherRes, forecastRes] = await Promise.all([
+                fetch(`/api/weather?lat=${coordinates[0]}&lon=${coordinates[1]}`),
+                fetch(`/api/forecast?lat=${coordinates[0]}&lon=${coordinates[1]}`)
+            ]);
+            const currentData = await weatherRes.json();
+            const futureData = await forecastRes.json();
+
+            setWeatherData(currentData);
+            
+            //the forecast api returns 40 timestamps -- aka every 3 hrs
+            //filter it to just grab one daytime reading (abt 12 pm) for the next 5 days
+            if(futureData.list){
+                const dailyForecasts = futureData.list.filter(item => item.dt_txt.includes("12:00:00"));
+                setForecastData(dailyForecasts);
+            }
         }
-        catch (error){
-            console.error("Failed to fetch weather", error);
+        catch(error){
+            console.error("Failed to fetch data", error);
         }
         finally{
             setLoading(false);
         }
     };
-    fetchWeather();
+    fetchWeatherAndForecast();
   }, [coordinates]);
 
   //show the pulsing loading screen while waiting for OpenWeather
@@ -57,37 +70,56 @@ export default function ForecastDisplay({ coordinates }) {
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="bg-white rounded-xl shadow-md p-8 border-2 border-blue-200 w-full h-[400px] flex flex-col justify-center"
+      //NOTE:changed from fixed h-[400px] to h-full so it flexes nicely
+      className="bg-white rounded-xl shadow-md p-6 border-2 border-blue-200 w-full h-full flex flex-col justify-between"
     >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">
-          {weatherData.name ? weatherData.name : "Current Weather"}
-        </h2>
-        {/*NOTE: used OpenWeather's live dynamic icons*/}
-        <img 
-          src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`} 
-          alt={weatherData.weather[0].description}
-          className="w-20 h-20 bg-blue-100 rounded-full"
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 text-center mb-6">
-        <div className="p-4 bg-orange-50 rounded-lg border border-orange-100">
-          <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Temp</p>
-          {/*Math.round removes the decimals from the temperature */}
-          <p className="text-3xl font-bold text-orange-600">{Math.round(weatherData.main.temp)}°F</p>
+      {/*CURRENT WEATHER SECTION*/}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-3xl font-bold text-gray-800">
+            {weatherData.name ? weatherData.name : "Current Weather"}
+          </h2>
+          <img 
+            src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`} 
+            alt={weatherData.weather[0].description}
+            className="w-16 h-16 bg-blue-100 rounded-full"
+          />
         </div>
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Humidity</p>
-          <p className="text-3xl font-bold text-blue-600">{weatherData.main.humidity}%</p>
+        
+        <div className="grid grid-cols-2 gap-4 text-center mb-4">
+          <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Temp</p>
+            <p className="text-2xl font-bold text-orange-600">{Math.round(weatherData.main.temp)}°F</p>
+          </div>
+          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Humidity</p>
+            <p className="text-2xl font-bold text-blue-600">{weatherData.main.humidity}%</p>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 bg-green-50 rounded-lg border border-green-100 text-center">
-        <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Conditions</p>
-        <p className="text-2xl font-bold text-green-600 capitalize">
-          {weatherData.weather[0].description}
-        </p>
+      {/*5-DAY FORECAST SECTION*/}
+      <div className="mt-4 pt-4 border-t-2 border-gray-100">
+        <p className="text-sm text-gray-500 uppercase tracking-wider mb-3 font-semibold">5-Day Forecast</p>
+        <div className="grid grid-cols-5 gap-2">
+          {forecastData.map((day, index) => {
+            //format the date text into a short day name (e.g., "Mon", "Tue")
+            const date = new Date(day.dt * 1000);
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+
+            return (
+              <div key={index} className="flex flex-col items-center p-2 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-xs font-semibold text-gray-600">{dayName}</p>
+                <img 
+                  src={`http://openweathermap.org/img/wn/${day.weather[0].icon}.png`} 
+                  alt={day.weather[0].description}
+                  className="w-10 h-10"
+                />
+                <p className="text-sm font-bold text-gray-800">{Math.round(day.main.temp)}°</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </motion.div>
   );
