@@ -47,7 +47,7 @@ export default function LoginPage() {
                     <input
                         type="email"
                         placeholder="Email"
-                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
@@ -55,7 +55,7 @@ export default function LoginPage() {
                     <input
                         type="password"
                         placeholder="Password"
-                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required

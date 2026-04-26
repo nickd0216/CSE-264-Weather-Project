@@ -5,25 +5,56 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+    // Added confirmPassword to the state
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+    });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Helper function to check password rules
+    const validatePassword = (password) => {
+        if (password.length < 12) return "Password must be at least 12 characters long.";
+        if (!/[A-Z]/.test(password)) return "Password must contain at least one capital letter.";
+        if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
+        // Checks for any character that is NOT a letter or number
+        if (!/[^A-Za-z0-9]/.test(password)) return "Password must contain at least one symbol.";
+        return null; // Passes all checks
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
 
+        // Run validations BEFORE calling the API
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match.");
+            setLoading(false);
+            return;
+        }
+
+        const passwordError = validatePassword(formData.password);
+        if (passwordError) {
+            setError(passwordError);
+            setLoading(false);
+            return;
+        }
+
         try {
-            // Sending data to your team's API route
+            // We strip out confirmPassword so we don't send it to the backend
+            const { confirmPassword, ...apiData } = formData;
+
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(apiData),
             });
 
             if (res.ok) {
-                // If successful, send them to the login page
                 router.push("/login");
             } else {
                 const data = await res.json();
@@ -47,7 +78,7 @@ export default function RegisterPage() {
                     <input
                         type="text"
                         placeholder="Name"
-                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
@@ -55,7 +86,7 @@ export default function RegisterPage() {
                     <input
                         type="email"
                         placeholder="Email"
-                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
@@ -63,15 +94,24 @@ export default function RegisterPage() {
                     <input
                         type="password"
                         placeholder="Password"
-                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required
+                    />
+                    {/* New Confirm Password Field */}
+                    <input
+                        type="password"
+                        placeholder="Confirm Password"
+                        className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                         required
                     />
                     <button
                         type="submit"
                         disabled={loading}
-                        className="bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
+                        className="bg-green-600 text-white font-bold py-3 mt-2 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
                     >
                         {loading ? "Planting your account..." : "Sign Up"}
                     </button>
