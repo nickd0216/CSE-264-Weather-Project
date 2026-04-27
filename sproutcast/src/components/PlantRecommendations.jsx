@@ -99,6 +99,12 @@ export default function PlantRecommendations({ coordinates }) {
                     ❄️ Frost Risk
                   </div>
                 )}
+                {/*heat risk badge */}
+                {plant.heat_risk && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow flex items-center gap-1">
+                    🔥 Heat Risk
+                  </div>
+                )}
               </div>
 
               {/*Plant details!!*/}

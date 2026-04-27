@@ -40,6 +40,7 @@ export async function GET(req) {
     const weather = await fetchWeather({ lat, lon });
     const currentTempF = weather.current.temp_f;
     const forecastMin = Math.min(...weather.forecast.map((d) => d.temp_min_f));
+    const forecastMax = Math.max(...weather.forecast.map((d) => d.temp_max_f));
 
     // Match plants whose hardiness range covers the current temp.
     // We also order by how well-centered the current temp sits in their range —
@@ -65,16 +66,18 @@ export async function GET(req) {
       params,
     );
 
-    // Flag plants at risk of frost in the 5-day forecast.
+    // Flag plants at risk of extreme temps in the 5-day forecast
     const withRisk = plants.map((p) => ({
       ...p,
-      frost_risk: p.min_temp_f != null && forecastMin < p.min_temp_f,
+      frostRisk: forecastMin < p.min_temp_f,
+      heatRist: forecastMax > p.max_temp_f,
     }));
 
     return NextResponse.json({
       location: weather.location,
       current: weather.current,
       forecast_min_f: forecastMin,
+      forecast_max_f: forecastMax,
       recommendations: withRisk,
     });
   } catch (err) {
