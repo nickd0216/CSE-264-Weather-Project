@@ -6,7 +6,8 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import SearchBar from "../components/SearchBar";
 import ForecastDisplay from "../components/ForecastDisplay"; 
-import PlantRecommendations from "../components/PlantRecommendations"; //import new component
+import PlantRecommendations from "../components/PlantRecommendations"; 
+import PlantCatalog from "../components/PlantCatalog"; //import new component
 
 //this tells Next.js to ONLY load the map on the client side (browser), avoiding ssr crashes
 const MapComponent = dynamic(() => import("../components/Map"), {
@@ -51,9 +52,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/*add the recommendations component here, passing coords down !*/}
-      <div classname="max-w-6xl mx-auto">
+      {/*existing recommendations*/}
+      <div className="max-w-6xl mx-auto">
         <PlantRecommendations coordinates={mapCoordinates} />
+      </div>
+
+      {/*add plant catalog*/}
+      <div className="max-w-6xl mx-auto">
+        <PlantCatalog />
       </div>
 
     </main>
