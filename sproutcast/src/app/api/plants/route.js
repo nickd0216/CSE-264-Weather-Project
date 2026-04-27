@@ -8,16 +8,13 @@ import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/session';
 
 // ---------- GET /api/plants ----------
-// Optional query params:
-//   ?q=tomato           - search common_name / scientific_name
-//   ?season=spring      - CSV seasons field contains this token
-//   ?temp=55            - only plants whose range covers this temp
-//   ?limit=50           - defaults to 50, max 200
 export async function GET(req) {
   const url = new URL(req.url);
   const q = url.searchParams.get('q');
   const season = url.searchParams.get('season');
   const temp = url.searchParams.get('temp');
+  const sunlight = url.searchParams.get('sunlight');
+  const watering = url.searchParams.get('watering');
   const limit = Math.min(Number(url.searchParams.get('limit')) || 50, 200);
 
   const where = [];
@@ -30,29 +27,39 @@ export async function GET(req) {
     i++;
   }
   if (season) {
-    // seasons is CSV, e.g. 'spring,summer' — match token with commas as delimiters
     where.push(`(',' || seasons || ',') ILIKE $${i}`);
     params.push(`%,${season},%`);
     i++;
   }
-  if (temp && Number.isFinite(Number(temp))) {
+  if (sunlight) {
+    where.push(`sunlight ILIKE $${i}`);
+    params.push(`%${sunlight}%`);
+    i++;
+  }
+  if (watering) {
+    where.push(`watering ILIKE $${i}`);
+    params.push(`%${watering}%`);
+    i++;
+  }
+  if (temp) {
     where.push(`min_temp_f <= $${i} AND max_temp_f >= $${i}`);
     params.push(Number(temp));
     i++;
   }
 
-  const sql = `
-    SELECT id, external_id, common_name, scientific_name, description,
-           min_temp_f, max_temp_f, watering, sunlight, image_url, seasons
-    FROM plants
-    ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-    ORDER BY common_name
-    LIMIT $${i}
-  `;
-  params.push(limit);
-
-  const rows = await query(sql, params);
-  return NextResponse.json({ plants: rows });
+  //if there are no filters, just get everything (up to the limit)
+  const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  
+  try {
+    //uses the 'query' imported at the top of the file -- next.js compliant
+    const plants = await query(
+      `SELECT * FROM plants ${whereClause} ORDER BY common_name ASC LIMIT $${i}`,
+      [...params, limit]
+    );
+    return NextResponse.json({ plants });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ---------- POST /api/plants ----------
