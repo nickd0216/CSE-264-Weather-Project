@@ -64,15 +64,10 @@ export default function SearchBar({onCitySelect}) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Enter your city (e.g., Bethlehem, PA)"
+            placeholder="Enter your city (e.g., Bethlehem, PA) to search!"
             className="w-full px-4 py-3 rounded-full border-2 border-green-300 focus:outline-none focus:border-green-600 shadow-sm text-gray-700"
           />
-          <button
-            type="submit"
-            className="absolute right-2 px-4 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
-          >
-            Search
-          </button>
+          
         </div>
       </form>
 
