@@ -42,6 +42,9 @@ export async function GET(req) {
     const forecastMin = Math.min(...weather.forecast.map((d) => d.temp_min_f));
     const forecastMax = Math.max(...weather.forecast.map((d) => d.temp_max_f));
 
+    //get region from url
+    const region = url.searchParams.get('region');
+
     // Match plants whose hardiness range covers the current temp.
     // We also order by how well-centered the current temp sits in their range —
     // a plant happy from 50-90°F at 70°F is a better match than one happy 30-60°F.
@@ -55,9 +58,16 @@ export async function GET(req) {
       i++;
     }
 
+    //filter by region if user selected one
+    if(region){
+      where.push(`native_regions ILIKE $${i}`);
+      params.push(`%${region}%`);
+      i++;
+    }
+
     const plants = await query(
       `SELECT id, external_id, common_name, scientific_name, description,
-              min_temp_f, max_temp_f, watering, sunlight, image_url, seasons,
+              min_temp_f, max_temp_f, watering, sunlight, image_url, seasons, native_regions,
               ABS(((min_temp_f + max_temp_f) / 2.0) - $1) AS distance_from_ideal
        FROM plants
        WHERE ${where.join(' AND ')}

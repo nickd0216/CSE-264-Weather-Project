@@ -79,7 +79,7 @@ export default function PlantCatalog() {
         <select value={sunlight} onChange={(e) => setSunlight(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-500 bg-white">
           <option value="">Any Sun</option>
           <option value="full sun">Full Sun</option>
-          <option value="part shade">Part Shade</option>
+          <option value="partial shade">Partial Shade</option>
         </select>
 
         <select value={watering} onChange={(e) => setWatering(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-500 bg-white">
