@@ -10,7 +10,13 @@ export async function getCurrentUser() {
   if (!token) return null;
   const payload = await verifySessionToken(token);
   if (!payload) return null;
-  return { userId: payload.userId, role: payload.role };
+
+  // Added payload.name here
+  return {
+    userId: payload.userId,
+    role: payload.role,
+    name: payload.name
+  };
 }
 
 export async function requireUser() {

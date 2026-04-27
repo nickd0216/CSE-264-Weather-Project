@@ -24,7 +24,7 @@ export default function LoginPage() {
 
             if (res.ok) {
                 // If successful, send them to the homepage or garden
-                router.push("/");
+                window.location.href = "/";
             } else {
                 const data = await res.json();
                 setError(data.message || "Invalid credentials.");

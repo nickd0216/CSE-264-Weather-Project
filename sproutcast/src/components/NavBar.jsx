@@ -1,37 +1,38 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/session"; // Grabbing the NextAuth session
+import { getCurrentUser } from "@/lib/session";
+
+// Forces Next.js to check the cookie on every single request 
+// rather than serving a cached (logged-out) version of the bar.
+export const dynamic = 'force-dynamic';
 
 export default async function Navbar() {
-    // Check if the user is currently logged in
-    const session = await getCurrentUser();
+    const user = await getCurrentUser();
 
     return (
         <nav className="bg-green-700 text-white p-4 shadow-md">
             <div className="max-w-6xl mx-auto flex justify-between items-center">
-                {/* Logo / Brand */}
                 <Link href="/" className="text-2xl font-bold tracking-wider">
-                    Sproutcast
+                    🌱 Sproutcast
                 </Link>
 
-                {/* Navigation Links */}
                 <div className="flex items-center space-x-6 font-semibold">
-                    <Link href="/" className="hover:text-green-200 transition">
-                        Home
-                    </Link>
-
-                    {/* Conditional Rendering based on Authentication */}
-                    {session?.user ? (
+                    {user ? (
                         <>
+                            {/* Displaying the user's name from the JWT payload */}
+                            <span className="text-green-100 font-normal">
+                                Welcome, <span className="font-bold text-white">{user.name || 'Gardener'}</span>
+                            </span>
+
                             <Link href="/garden" className="hover:text-green-200 transition">
                                 My Garden
                             </Link>
-                            {/* For now, linking to the logout API your team built */}
-                            <Link
+
+                            <a
                                 href="/api/auth/logout"
-                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition shadow-sm text-sm"
                             >
                                 Logout
-                            </Link>
+                            </a>
                         </>
                     ) : (
                         <>
