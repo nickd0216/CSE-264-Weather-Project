@@ -1,25 +1,38 @@
+// src/components/NavBar.jsx
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
 
-// Forces Next.js to check the cookie on every single request 
-// rather than serving a cached (logged-out) version of the bar.
 export const dynamic = 'force-dynamic';
 
-export default async function Navbar() {
+export default async function NavBar() {
     const user = await getCurrentUser();
 
     return (
-        <nav className="bg-green-700 text-white p-4 shadow-md">
+        <nav className="bg-green-700 text-white p-4 shadow-md sticky top-0 z-50">
             <div className="max-w-6xl mx-auto flex justify-between items-center">
-                <Link href="/" className="text-2xl font-bold tracking-wider">
-                    🌱 Sproutcast
-                </Link>
 
+                <div className="flex items-center space-x-8">
+                    <span className="text-2xl font-extrabold tracking-tight">
+                        🌱 SproutCast
+                    </span>
+
+                    {/* Always visible public navigation */}
+                    <div className="hidden sm:flex space-x-6 font-medium text-green-100">
+                        <Link href="/" className="hover:text-white transition">
+                            Thriving Now
+                        </Link>
+                        <Link href="/library" className="hover:text-white transition">
+                            Plant Library
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Auth & Private Links */}
                 <div className="flex items-center space-x-6 font-semibold">
                     {user ? (
                         <>
-                            {/* Displaying the user's name from the JWT payload */}
-                            <span className="text-green-100 font-normal">
+                            {/* Logged In: Name, Garden, and Logout */}
+                            <span className="text-green-100 font-normal hidden md:inline">
                                 Welcome, <span className="font-bold text-white">{user.name || 'Gardener'}</span>
                             </span>
 
@@ -36,6 +49,7 @@ export default async function Navbar() {
                         </>
                     ) : (
                         <>
+                            {/* Login and Sign Up */}
                             <Link href="/login" className="hover:text-green-200 transition">
                                 Log In
                             </Link>
