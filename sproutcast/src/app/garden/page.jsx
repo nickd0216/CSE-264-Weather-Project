@@ -5,23 +5,29 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 export default function VirtualGarden() {
-  // 1. MOCK AUTH STATE: Toggle this to false to see what logged-out users will see!
+  // Start assuming they are logged in; the real API will tell us if they aren't!
   const [isAuthenticated, setIsAuthenticated] = useState(true); 
-
-  // 2. GARDEN STATE
   const [myPlants, setMyPlants] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 3. MOCK FETCH: Grabbing a few plants from the public API to use as "saved" plants
-    // Chris will replace this URL with his authenticated `/api/garden` route later!
+    // REAL FETCH: Grab the user's actual saved plants
     const fetchGarden = async () => {
-      if (!isAuthenticated) return;
-      
       try {
-        const res = await fetch("/api/plants?limit=4"); 
+        const res = await fetch("/api/garden"); 
+        
+        // If the backend blocks us, it means the user isn't logged in!
+        if (res.status === 401 || res.status === 403) {
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+
+        if (!res.ok) throw new Error("Failed to fetch garden");
+
         const data = await res.json();
-        setMyPlants(data.plants || []);
+        // backend sends the rows inside an "entries" array
+        setMyPlants(data.entries || []);
       } catch (error) {
         console.error("Failed to load garden:", error);
       } finally {
@@ -30,11 +36,26 @@ export default function VirtualGarden() {
     };
 
     fetchGarden();
-  }, [isAuthenticated]);
+  }, []);
 
-  // 4. MOCK REMOVE: Visually removes the plant. Chris will add the actual DELETE API call here.
-  const removeFromGarden = (plantId) => {
-    setMyPlants(myPlants.filter(plant => plant.id !== plantId));
+  // REAL REMOVE: Deletes the plant from the database
+  const removeFromGarden = async (entryId) => {
+    // 1. hide it from the screen instantly for a snappy UI
+    setMyPlants((prevPlants) => prevPlants.filter(plant => plant.id !== entryId));
+
+    try {
+      // 2. Tell the database to delete it permanently
+      const res = await fetch(`/api/garden?id=${entryId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!res.ok) {
+        console.error("Failed to delete from database");
+        // future iteration: can fetch the garden again here to bring the plant back if the db failed
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+    }
   };
 
   // --- UI RENDER: LOGGED OUT ---
@@ -45,9 +66,11 @@ export default function VirtualGarden() {
         <p className="text-gray-600 mb-8 max-w-md">
           Please log in or create a free account to save plants, track your garden, and get personalized recommendations.
         </p>
-        <button className="bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition">
-          Log In to SproutCast
-        </button>
+        <Link href="/login">
+          <button className="bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition">
+            Log In to SproutCast
+          </button>
+        </Link>
       </div>
     );
   }
@@ -55,13 +78,13 @@ export default function VirtualGarden() {
   // --- UI RENDER: LOGGED IN ---
   return (
     <div className="max-w-6xl mx-auto p-8 pt-12 min-h-screen">
-      <div className="flex justify-between items-end mb-8 border-b border-green-200 pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-green-200 pb-4 gap-4">
         <div>
           <h1 className="text-4xl font-bold text-green-800">My Virtual Garden</h1>
           <p className="text-gray-600 mt-2">Track and manage your favorite plants.</p>
         </div>
         <Link href="/library">
-          <button className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold hover:bg-green-200 transition">
+          <button className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold hover:bg-green-200 transition whitespace-nowrap">
             + Add More Plants
           </button>
         </Link>
@@ -78,7 +101,7 @@ export default function VirtualGarden() {
           <div className="text-6xl mb-4 opacity-50">🪴</div>
           <h2 className="text-2xl font-bold text-gray-700 mb-2">Your garden is empty!</h2>
           <p className="text-gray-500 mb-6">Go back to the Plant Library to search and save plants to your garden.</p>
-          <Link href="/">
+          <Link href="/library">
             <button className="bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 transition">
               Explore Plants
             </button>
@@ -88,7 +111,7 @@ export default function VirtualGarden() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {myPlants.map((plant, index) => (
             <motion.div
-              key={plant.id}
+              key={plant.id} // Note: this is the garden_entry ID, not the plant ID!
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}

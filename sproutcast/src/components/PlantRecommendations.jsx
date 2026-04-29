@@ -6,20 +6,45 @@ endpoint and display teh results nicely.
 
 Frame Motion is used to make the plant cards stagger in one by one.
 
-TODO: the test data inserted doesnt have image urls yet, so theres
-an image fallback placeholder for now.
 */
 "use client";
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-export default function PlantRecommendations({ coordinates }) {
+export default function PlantRecommendations({ coordinates, userId }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   //state for the drop down
   const [region, setRegion] = useState("");
+
+  const handleAddToGarden = async (plantId) => {
+    //Check if the userId prop actually exists (meaning they are logged in)
+    if (!userId) {
+      alert("Please log in to save plants to your Virtual Garden! 🌱");
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/garden', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Send the real userId to the database!
+        body: JSON.stringify({ plant_id: plantId }) 
+      });
+      
+      if (res.ok) {
+        alert("Added to your Virtual Garden! 🌿");
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to add plant: ${errorData.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while saving.");
+    }
+  };
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -116,29 +141,13 @@ export default function PlantRecommendations({ coordinates }) {
                   <span className="text-6xl opacity-50">🌿</span>
                 )}
               </div>  
-            
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-gray-800 leading-tight">{plant.common_name}</h3>
-                <p className="text-xs text-gray-400 italic mb-2">{plant.scientific_name}</p>
                 
-                {/* NEW: Risk and Local Badges */}
-                <div className="flex flex-wrap gap-2 mb-4 mt-1">
-                  {plant.frostRisk && (
-                    <span className="text-[10px] uppercase font-bold bg-blue-100 text-blue-800 px-2 py-1 rounded">❄️ Frost Risk</span>
-                  )}
-                  {plant.heatRisk && (
-                    <span className="text-[10px] uppercase font-bold bg-red-100 text-red-800 px-2 py-1 rounded">🔥 Heat Risk</span>
-                  )}
-                  {plant.native_regions && plant.native_regions !== 'Unknown' && (
-                    <span className="text-[10px] uppercase font-bold bg-green-100 text-green-800 px-2 py-1 rounded truncate max-w-[120px]" title={plant.native_regions}>
-                      📍 {plant.native_regions.split(',')[0]}
-                    </span>
-                  )}
-                </div>  
-              </div>  
-              
+
               {/*Plant details!!*/}
               <div className="p-4 flex-1 flex flex-col">
+                <h3 className="text-xl font-bold text-gray-800 leading-tight">{plant.common_name}</h3>
+                <p className="text-xs text-gray-400 italic mb-3">{plant.scientific_name}</p>
+                
                 <div className="mt-auto space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Hardiness:</span>
@@ -146,12 +155,19 @@ export default function PlantRecommendations({ coordinates }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Sun:</span>
-                    <span className="font-semibold text-gray-700 capitalize">{plant.sunlight.split(',')[0]}</span>
+                    <span className="font-semibold text-gray-700 capitalize">{plant.sunlight}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Water:</span>
                     <span className="font-semibold text-gray-700 capitalize">{plant.watering}</span>
                   </div>
+                  {/*added the Add to Garden button*/}
+                  <button 
+                    onClick={() => handleAddToGarden(plant.id)}
+                    className="w-full mt-4 bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2 px-4 rounded transition-colors"
+                  >
+                    + Add to Garden
+                  </button>
                 </div>
               </div>
             </motion.div>
